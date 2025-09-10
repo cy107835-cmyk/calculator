@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>合约手续费与盈亏计算器 — V5（VIP费率 + Maker/Taker + 一键全平/按百分比分仓）</title>
+  <title>合约手续费与盈亏计算器 — V6.2（双语言 / VIP费率 单一仓位全平&百分比分仓）</title>
   <style>
     :root { --bg:#0b0c10; --card:#15171c; --muted:#8a8f98; --fg:#e8edf2; --accent:#4da3ff; --ok:#22c55e; --bad:#ef4444; --border:#242833; }
     html,body{height:100%;}
@@ -21,7 +21,7 @@
     label{display:block;font-size:13px;color:var(--muted);margin:6px 0}
     input,select{width:100%;box-sizing:border-box;background:#0f1115;color:var(--fg);border:1px solid #23262d;border-radius:10px;padding:10px 12px;outline:none}
     input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(77,163,255,.2)}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
     .btn{cursor:pointer;border:1px solid #2a3039;background:#10131a;color:var(--fg);padding:10px 14px;border-radius:12px}
     .btn:hover{border-color:var(--accent)}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#081018}
@@ -34,6 +34,10 @@
     .switch>button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px 10px;border-radius:8px;cursor:pointer}
     .switch>button.active{color:var(--fg);background:#1a1f2a}
     .right{justify-content:flex-end}
+    .topbar{display:flex;justify-content:space-between;align-items:center}
+    .lang{display:flex;gap:6px}
+    .lang button{border:1px solid #2a3039;background:#10131a;color:var(--fg);padding:6px 10px;border-radius:10px;cursor:pointer}
+    .lang button.active{border-color:var(--accent);background:#162033}
     code{background:#0f141c;border:1px solid #202535;color:#e6edf3;padding:2px 6px;border-radius:6px}
     @media (max-width:900px){.col-2,.col-3,.col-4,.col-6,.col-12{grid-column:span 12}}
   </style>
@@ -41,25 +45,34 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>合约手续费与盈亏计算器 V5</h1>
-      <div class="muted">V2 样式与布局；支持 VIP 费率、开/平 Maker/Taker、未实现盈亏口径（剩余量/总量）、<b>一键全平/按百分比分仓</b>。</div>
+      <div class="topbar">
+        <div>
+          <h1 id="title">合约手续费与盈亏计算器 V6.2</h1>
+          <div class="muted" id="subtitle">支持 VIP 费率、开/平 Maker/Taker、全平/按百分比分仓；未实现盈亏按剩余持仓量计算。</div>
+        </div>
+        <div class="lang" aria-label="Language">
+          <button id="lang-zh" class="active">中文</button>
+          <button id="lang-en">English</button>
+        </div>
+      </div>
+
       <div class="hr"></div>
 
       <div class="grid">
         <div class="col-12">
-          <label>方向 / 未实现口径 / 平仓便捷操作</label>
+          <label id="lbl_dir_lev_tools">方向 / 杠杆 / 平仓便捷操作</label>
           <div class="row">
             <div class="switch" role="tablist" aria-label="方向">
               <button id="side-long" class="active" data-side="long" aria-pressed="true">做多 Long</button>
               <button id="side-short" data-side="short" aria-pressed="false">做空 Short</button>
             </div>
-            <div class="switch" role="tablist" aria-label="未实现口径">
-              <button id="unreal-remaining" class="active" data-unreal="remaining" aria-pressed="true" title="按剩余持仓量计算">未实现=剩余量</button>
-              <button id="unreal-total" data-unreal="total" aria-pressed="false" title="按总开仓量计算">未实现=总量</button>
+            <div style="display:flex; gap:8px; align-items:center">
+              <label for="leverage" style="margin:0;color:var(--muted);font-size:13px" id="lbl_leverage">杠杆（×）</label>
+              <input id="leverage" type="number" inputmode="decimal" step="0.1" min="1" value="20" style="width:120px" />
             </div>
             <button class="btn" id="btnFullClose" title="将平仓量设为等于开仓量">全部平仓</button>
             <div class="row" style="gap:8px;align-items:center">
-              <label for="partialPct" style="margin:0;color:var(--muted);font-size:13px">部分平仓 %</label>
+              <label for="partialPct" style="margin:0;color:var(--muted);font-size:13px" id="lbl_partialPct">部分平仓 %</label>
               <input id="partialPct" type="number" inputmode="decimal" step="0.01" min="0" max="100" placeholder="例如 25" style="width:120px" />
               <button class="btn" id="btnApplyPct">应用</button>
             </div>
@@ -67,36 +80,32 @@
         </div>
 
         <div class="col-3">
-          <label for="openPrice">开仓价格</label>
+          <label for="openPrice" id="lbl_openPrice">开仓价格</label>
           <input id="openPrice" type="number" inputmode="decimal" step="0.01" value="7000" />
         </div>
         <div class="col-3">
-          <label for="openQty">开仓数量（币）</label>
+          <label for="openQty" id="lbl_openQty">开仓数量（币）</label>
           <input id="openQty" type="number" inputmode="decimal" step="0.0001" value="20" />
         </div>
         <div class="col-3">
-          <label for="closePrice">平仓价格</label>
+          <label for="closePrice" id="lbl_closePrice">平仓价格</label>
           <input id="closePrice" type="number" inputmode="decimal" step="0.01" value="8000" />
         </div>
         <div class="col-3">
-          <label for="closeQty">平仓数量（币）</label>
+          <label for="closeQty" id="lbl_closeQty">平仓数量（币）</label>
           <input id="closeQty" type="number" inputmode="decimal" step="0.0001" value="10" />
         </div>
 
         <div class="col-3">
-          <label for="currentPrice">当前价格</label>
+          <label for="currentPrice" id="lbl_currentPrice">当前价格</label>
           <input id="currentPrice" type="number" inputmode="decimal" step="0.01" value="8000" />
         </div>
         <div class="col-3">
-          <label for="leverage">杠杆倍数（×）</label>
-          <input id="leverage" type="number" inputmode="decimal" step="0.1" min="1" value="20" />
-        </div>
-        <div class="col-3">
-          <label for="mmr">维持保证金率（%，可选）</label>
+          <label for="mmr" id="lbl_mmr">维持保证金率（%，可选）</label>
           <input id="mmr" type="number" inputmode="decimal" step="0.01" value="0.5" />
         </div>
         <div class="col-3">
-          <label for="vipLevel">VIP 等级（自动费率）</label>
+          <label for="vipLevel" id="lbl_vip">VIP 等级（自动费率）</label>
           <select id="vipLevel">
             <option value="0" selected>VIP0 — Taker 0.080% / Maker 0.020%</option>
             <option value="1">VIP1 — Taker 0.072% / Maker 0.018%</option>
@@ -111,14 +120,14 @@
         </div>
 
         <div class="col-3">
-          <label>开仓手续费类型</label>
+          <label id="lbl_openFeeType">开仓手续费类型</label>
           <div class="switch" role="tablist" aria-label="开仓手续费类型">
             <button id="open-fee-maker" data-feeopen="maker">Maker</button>
             <button id="open-fee-taker" class="active" data-feeopen="taker" aria-pressed="true">Taker</button>
           </div>
         </div>
         <div class="col-3">
-          <label>平仓手续费类型</label>
+          <label id="lbl_closeFeeType">平仓手续费类型</label>
           <div class="switch" role="tablist" aria-label="平仓手续费类型">
             <button id="close-fee-maker" data-feeclose="maker">Maker</button>
             <button id="close-fee-taker" class="active" data-feeclose="taker" aria-pressed="true">Taker</button>
@@ -135,34 +144,69 @@
       <div class="hr"></div>
 
       <div class="grid" id="results" aria-live="polite">
-        <div class="col-4"><div class="stat"><div class="label">开仓手续费</div><div class="value" id="feeOpen">-</div></div></div>
-        <div class="col-4"><div class="stat"><div class="label">平仓手续费</div><div class="value" id="feeClose">-</div></div></div>
-        <div class="col-4"><div class="stat"><div class="label">总手续费</div><div class="value" id="feeTotal">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_feeOpen">开仓手续费</div><div class="value" id="feeOpen">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_feeClose">平仓手续费</div><div class="value" id="feeClose">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_feeTotal">总手续费</div><div class="value" id="feeTotal">-</div></div></div>
 
-        <div class="col-4"><div class="stat"><div class="label">名义价值（Notional）</div><div class="value" id="notional">-</div></div></div>
-        <div class="col-4"><div class="stat"><div class="label">保证金占用（初始保证金）</div><div class="value" id="initMargin">-</div></div></div>
-        <div class="col-4"><div class="stat"><div class="label">强平价（简化估算）</div><div class="value" id="liqPrice">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_notional">名义价值（Notional）</div><div class="value" id="notional">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_initMargin">保证金占用（初始保证金）</div><div class="value" id="initMargin">-</div></div></div>
+        <div class="col-4"><div class="stat"><div class="label" id="lbl_liqPrice">强平价（简化估算）</div><div class="value" id="liqPrice">-</div></div></div>
 
-        <div class="col-6"><div class="stat"><div class="label">已实现盈亏（不含手续费）</div><div class="value" id="pnlRaw">-</div></div></div>
-        <div class="col-6"><div class="stat"><div class="label">已实现盈亏（含手续费）</div><div class="value" id="pnlNet">-</div></div></div>
-        <div class="col-12"><div class="stat"><div class="label">未实现盈亏（不含手续费）</div><div class="value" id="pnlUnreal">-</div></div></div>
+        <div class="col-6"><div class="stat"><div class="label" id="lbl_pnlRaw">已实现盈亏（不含手续费）</div><div class="value" id="pnlRaw">-</div></div></div>
+        <div class="col-6"><div class="stat"><div class="label" id="lbl_pnlNet">已实现盈亏（含手续费）</div><div class="value" id="pnlNet">-</div></div></div>
+        <div class="col-12"><div class="stat"><div class="label" id="lbl_pnlUnreal">未实现盈亏（不含手续费）</div><div class="value" id="pnlUnreal">-</div></div></div>
       </div>
 
       <div class="hr"></div>
-      <div class="muted">
+      <div class="muted" id="disclaimer">
         公式：<code>开仓手续费 = 开仓价 × 开仓量 × 费率</code>；<code>平仓手续费 = 平仓价 × 平仓量 × 费率</code>；
         <code>名义价值 = 开仓价 × 开仓量</code>；<code>初始保证金 ≈ 名义 ÷ 杠杆</code>；
-        <code>已实现盈亏（多）= 实现量 × (平 − 开)</code>；<code>已实现盈亏（空）= 实现量 × (开 − 平)</code>；
-        <code>未实现盈亏（多）= 口径量 × (现 − 开)</code>；<code>未实现盈亏（空）= 口径量 × (开 − 现)</code>；
-        <code>强平价（简化）多 = 开 × (1 + MMR − 1/杠杆)</code>；<code>空 = 开 × (1 + 1/杠杆 − MMR)</code>（忽略手续费/阶梯 MMR/资金费）。
+        <code>未实现盈亏</code> 按 <code>剩余持仓量</code>；
+        <code>强平价（简化）多 = 开 × (1 + MMR − 1/杠杆)</code>；<code>空 = 开 × (1 + 1/杠杆 − MMR)</code>（忽略手续费/阶梯 MMR/资金费，仅供参考）。
       </div>
     </div>
   </div>
 
   <script>
     const $ = (id)=>document.getElementById(id);
-    const state = { side:'long', unreal:'remaining', feeOpen:'taker', feeClose:'taker', unit:'USDT' };
+    const state = { side:'long', feeOpen:'taker', feeClose:'taker', unit:'USDT', lang:'zh' };
 
+    const t = {
+      zh: {
+        title:'合约手续费与盈亏计算器 V6.2',
+        subtitle:'V2 样式；支持 VIP 费率、开/平 Maker/Taker、全平/按百分比分仓；未实现盈亏按剩余持仓量计算。',
+        dirLevTools:'方向 / 杠杆 / 平仓便捷操作',
+        leverage:'杠杆（×）',
+        fullClose:'全部平仓', apply:'应用', partialPct:'部分平仓 %', placeholderPct:'例如 25',
+        sideLong:'做多 Long', sideShort:'做空 Short',
+        openPrice:'开仓价格', openQty:'开仓数量（币）', closePrice:'平仓价格', closeQty:'平仓数量（币）', currentPrice:'当前价格',
+        mmr:'维持保证金率（%，可选）', vip:'VIP 等级（自动费率）',
+        openFeeType:'开仓手续费类型', closeFeeType:'平仓手续费类型',
+        example:'一键填入示例（7000/8000）', reset:'清空', calc:'计算',
+        feeOpen:'开仓手续费', feeClose:'平仓手续费', feeTotal:'总手续费',
+        notional:'名义价值（Notional）', initMargin:'保证金占用（初始保证金）', liqPrice:'强平价（简化估算）',
+        pnlRaw:'已实现盈亏（不含手续费）', pnlNet:'已实现盈亏（含手续费）', pnlUnreal:'未实现盈亏（不含手续费）',
+        disclaimer:'公式：<code>开仓手续费 = 开仓价 × 开仓量 × 费率</code>；<code>平仓手续费 = 平仓价 × 平仓量 × 费率</code>；<code>名义价值 = 开仓价 × 开仓量</code>；<code>初始保证金 ≈ 名义 ÷ 杠杆</code>；<code>未实现盈亏</code> 按 <code>剩余持仓量</code>；<code>强平价（简化）多 = 开 × (1 + MMR − 1/杠杆)</code>；<code>空 = 开 × (1 + 1/杠杆 − MMR)</code>（忽略手续费/阶梯 MMR/资金费，仅供参考）。'
+      },
+      en: {
+        title:'Futures Fee & PnL Calculator V6.2',
+        subtitle:'V2 layout; supports VIP fees, Maker/Taker (open/close), close-all / partial by %, unrealized P&L on remaining position.',
+        dirLevTools:'Direction / Leverage / Quick Close Tools',
+        leverage:'Leverage (×)',
+        fullClose:'Close All', apply:'Apply', partialPct:'Partial Close %', placeholderPct:'e.g. 25',
+        sideLong:'Long', sideShort:'Short',
+        openPrice:'Open Price', openQty:'Open Quantity (coin)', closePrice:'Close Price', closeQty:'Close Quantity (coin)', currentPrice:'Current Price',
+        mmr:'Maintenance Margin Rate (%)', vip:'VIP Level (auto fee)',
+        openFeeType:'Open Fee Type', closeFeeType:'Close Fee Type',
+        example:'Fill Example (7000/8000)', reset:'Reset', calc:'Calculate',
+        feeOpen:'Open Fee', feeClose:'Close Fee', feeTotal:'Total Fee',
+        notional:'Nominal Value', initMargin:'Margin Used (Initial)', liqPrice:'Est. Liq. Price',
+        pnlRaw:'Realized P&L (excl. fees)', pnlNet:'Realized P&L (incl. fees)', pnlUnreal:'Unrealized P&L (excl. fees)',
+        disclaimer:'Formulas: <code>Open fee = Open price × Open qty × fee</code>; <code>Close fee = Close price × Close qty × fee</code>; <code>Nominal = Open price × Open qty</code>; <code>Initial margin ≈ Nominal ÷ Leverage</code>; <code>Unrealized P&L</code> uses <code>remaining position</code>; <code>Liq. price (simple)</code> long = Open × (1 + MMR − 1/Lev), short = Open × (1 + 1/Lev − MMR). Fees/tiers/funding ignored; for reference only.'
+      }
+    };
+
+    // 只声明一次 vipRates，避免重复报错
     const vipRates = {
       0:{taker:0.0008, maker:0.0002},
       1:{taker:0.00072, maker:0.00018},
@@ -182,48 +226,95 @@
       });
     }
 
-    // Switch handlers
+    function setLang(lang){
+      state.lang = lang;
+      document.documentElement.lang = (lang==='zh'?'zh-CN':'en');
+      const tt = t[lang];
+      // 文案替换
+      $('title').textContent = tt.title;
+      $('subtitle').textContent = tt.subtitle;
+      $('lbl_dir_lev_tools').textContent = tt.dirLevTools;
+      $('lbl_leverage').textContent = tt.leverage;
+      $('btnFullClose').textContent = tt.fullClose;
+      $('lbl_partialPct').textContent = tt.partialPct;
+      $('btnApplyPct').textContent = tt.apply;
+      $('partialPct').placeholder = tt.placeholderPct;
+      $('side-long').textContent = tt.sideLong;
+      $('side-short').textContent = tt.sideShort;
+
+      $('lbl_openPrice').textContent = tt.openPrice;
+      $('lbl_openQty').textContent = tt.openQty;
+      $('lbl_closePrice').textContent = tt.closePrice;
+      $('lbl_closeQty').textContent = tt.closeQty;
+      $('lbl_currentPrice').textContent = tt.currentPrice;
+      $('lbl_mmr').textContent = tt.mmr;
+      $('lbl_vip').textContent = tt.vip;
+      $('lbl_openFeeType').textContent = tt.openFeeType;
+      $('lbl_closeFeeType').textContent = tt.closeFeeType;
+
+      $('exampleBtn').textContent = tt.example;
+      $('resetBtn').textContent = tt.reset;
+      $('calcBtn').textContent = tt.calc;
+
+      $('lbl_feeOpen').textContent = tt.feeOpen;
+      $('lbl_feeClose').textContent = tt.feeClose;
+      $('lbl_feeTotal').textContent = tt.feeTotal;
+      $('lbl_notional').textContent = tt.notional;
+      $('lbl_initMargin').textContent = tt.initMargin;
+      $('lbl_liqPrice').textContent = tt.liqPrice;
+      $('lbl_pnlRaw').textContent = tt.pnlRaw;
+      $('lbl_pnlNet').textContent = tt.pnlNet;
+      $('lbl_pnlUnreal').textContent = tt.pnlUnreal;
+
+      $('disclaimer').innerHTML = tt.disclaimer;
+
+      // 切换按钮高亮
+      $('lang-zh').classList.toggle('active', lang==='zh');
+      $('lang-en').classList.toggle('active', lang==='en');
+    }
+
+    // 方向切换
     $('side-long').onclick = (e)=>{ state.side='long'; setSwitch(e.currentTarget); calc(); };
     $('side-short').onclick = (e)=>{ state.side='short'; setSwitch(e.currentTarget); calc(); };
-    $('unreal-remaining').onclick = (e)=>{ state.unreal='remaining'; setSwitch(e.currentTarget); calc(); };
-    $('unreal-total').onclick = (e)=>{ state.unreal='total'; setSwitch(e.currentTarget); calc(); };
 
-    // Maker/Taker fee type
-    $('open-fee-maker').onclick = (e)=>{ state.feeOpen='maker'; setSwitch(e.currentTarget); calc(); };
-    $('open-fee-taker').onclick = (e)=>{ state.feeOpen='taker'; setSwitch(e.currentTarget); calc(); };
-    $('close-fee-maker').onclick = (e)=>{ state.feeClose='maker'; setSwitch(e.currentTarget); calc(); };
-    $('close-fee-taker').onclick = (e)=>{ state.feeClose='taker'; setSwitch(e.currentTarget); calc(); };
+    // Maker/Taker 费率类型
+    $('open-fee-maker').onclick = (e)=>{ setSwitch(e.currentTarget); state.feeOpen='maker'; calc(); };
+    $('open-fee-taker').onclick = (e)=>{ setSwitch(e.currentTarget); state.feeOpen='taker'; calc(); };
+    $('close-fee-maker').onclick = (e)=>{ setSwitch(e.currentTarget); state.feeClose='maker'; calc(); };
+    $('close-fee-taker').onclick = (e)=>{ setSwitch(e.currentTarget); state.feeClose='taker'; calc(); };
 
-    // 全部平仓/按百分比
+    // 全部平仓 / 百分比分仓
     $('btnFullClose').onclick = ()=>{ const oq = num($('openQty').value)||0; $('closeQty').value = oq; calc(); };
     $('btnApplyPct').onclick = ()=>{ applyPct(); };
-    $('partialPct').addEventListener('input', ()=>{ /* 实时应用也可以：*/ applyPct(); });
+    $('partialPct').addEventListener('input', ()=>{ applyPct(); });
     function applyPct(){
       const pct = Math.max(0, Math.min(100, num($('partialPct').value)));
       const oq = num($('openQty').value)||0;
       if (!isNaN(pct) && oq>0){ $('closeQty').value = +(oq * pct/100).toFixed(8); calc(); }
     }
 
-    // Buttons
+    // 语言切换（使用 addEventListener，避免后续覆盖）
+    $('lang-zh').addEventListener('click', ()=> setLang('zh'));
+    $('lang-en').addEventListener('click', ()=> setLang('en'));
+
+    // 常规按钮
     $('resetBtn').onclick = ()=>{
       $('openPrice').value=7000; $('openQty').value=20; $('closePrice').value=8000; $('closeQty').value=10; $('currentPrice').value=8000; $('leverage').value=20; $('mmr').value=0.5; $('vipLevel').value='0';
-      $('side-long').click(); $('unreal-remaining').click(); $('open-fee-taker').click(); $('close-fee-taker').click();
-      $('partialPct').value='';
+      $('side-long').click(); $('open-fee-taker').click(); $('close-fee-taker').click(); $('partialPct').value='';
       renderResults(null);
     };
 
     $('exampleBtn').onclick = ()=>{
       $('openPrice').value=7000; $('openQty').value=20; $('closePrice').value=8000; $('closeQty').value=10; $('currentPrice').value=8000; $('leverage').value=20; $('mmr').value=0.5; $('vipLevel').value='0';
-      $('side-long').click(); $('unreal-remaining').click(); $('open-fee-taker').click(); $('close-fee-taker').click();
-      $('partialPct').value='';
+      $('side-long').click(); $('open-fee-taker').click(); $('close-fee-taker').click(); $('partialPct').value='';
       calc();
     };
 
     $('calcBtn').onclick = calc;
 
-    // Auto-calc on input
+    // 输入变更 => 计算
     ['openPrice','openQty','closePrice','closeQty','currentPrice','leverage','mmr','vipLevel']
-      .forEach(id=> $(id).addEventListener('input', calc));
+      .forEach(id=> document.getElementById(id).addEventListener('input', calc));
 
     function num(v){ const x = parseFloat(v); return Number.isFinite(x) ? x : NaN; }
     function fmtMoney(n){ if (!Number.isFinite(n)) return '-'; const s = (Math.round(n*100)/100).toFixed(2); return (n>0?'+':'') + s + ' ' + state.unit; }
@@ -258,9 +349,9 @@
       }
       const pnlNet = (Number.isFinite(pnlRaw) && Number.isFinite(feeTotal)) ? (pnlRaw - feeTotal) : NaN;
 
-      // 未实现盈亏（不含手续费）
+      // 未实现盈亏（固定按剩余持仓量，不含手续费）
       let pnlUnreal = NaN;
-      const unrealQty = state.unreal==='remaining' ? remainingQty : (openQty||0);
+      const unrealQty = remainingQty;
       if (Number.isFinite(openPrice) && Number.isFinite(currentPrice) && Number.isFinite(unrealQty) && unrealQty>0) {
         pnlUnreal = state.side==='long' ? unrealQty * (currentPrice - openPrice)
                                         : unrealQty * (openPrice - currentPrice);
@@ -287,23 +378,27 @@
           .forEach(id=> set(id, dash));
         return;
       }
-      set('feeOpen',  fmtMoney(res.feeOpen),  res.feeOpen>=0?'pos':'neg');
-      set('feeClose', fmtMoney(res.feeClose), res.feeClose>=0?'pos':'neg');
-      set('feeTotal', fmtMoney(res.feeTotal), res.feeTotal>=0?'pos':'neg');
+      $('feeOpen').textContent = fmtMoney(res.feeOpen);
+      $('feeClose').textContent = fmtMoney(res.feeClose);
+      $('feeTotal').textContent = fmtMoney(res.feeTotal);
 
-      set('notional',   fmtPlain(res.notional));
-      set('initMargin', fmtPlain(res.initMargin));
-      set('liqPrice',   Number.isFinite(res.liqPrice)? (Math.round(res.liqPrice*100)/100).toFixed(2)+' '+state.unit : '-');
+      $('notional').textContent = fmtPlain(res.notional);
+      $('initMargin').textContent = fmtPlain(res.initMargin);
+      $('liqPrice').textContent = Number.isFinite(res.liqPrice)? (Math.round(res.liqPrice*100)/100).toFixed(2)+' '+state.unit : '-';
 
-      set('pnlRaw',   fmtMoney(res.pnlRaw),   Number.isFinite(res.pnlRaw) && res.pnlRaw>=0?'pos':'neg');
-      set('pnlNet',   fmtMoney(res.pnlNet),   Number.isFinite(res.pnlNet) && res.pnlNet>=0?'pos':'neg');
-      set('pnlUnreal',fmtMoney(res.pnlUnreal),Number.isFinite(res.pnlUnreal) && res.pnlUnreal>=0?'pos':'neg');
+      $('pnlRaw').textContent = fmtMoney(res.pnlRaw);
+      $('pnlRaw').className = 'value ' + (Number.isFinite(res.pnlRaw) && res.pnlRaw>=0?'pos':'neg');
+      $('pnlNet').textContent = fmtMoney(res.pnlNet);
+      $('pnlNet').className = 'value ' + (Number.isFinite(res.pnlNet) && res.pnlNet>=0?'pos':'neg');
+      $('pnlUnreal').textContent = fmtMoney(res.pnlUnreal);
+      $('pnlUnreal').className = 'value ' + (Number.isFinite(res.pnlUnreal) && res.pnlUnreal>=0?'pos':'neg');
     }
 
-    // 初始
-    (function init(){
-      document.getElementById('exampleBtn').click();
-    })();
+    // 初始化
+    window.addEventListener('DOMContentLoaded', ()=>{
+      setLang('zh');
+      $('exampleBtn').click();
+    });
   </script>
 </body>
 </html>
