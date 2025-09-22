@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>合约手续费与盈亏计算器 — V6.2（双语言 / VIP费率 单一仓位全平&百分比分仓）</title>
+  <title>合约手续费与盈亏计算器 — V7（双语言 / VIP费率 单一仓位全平&百分比分仓）</title>
   <style>
     :root { --bg:#0b0c10; --card:#15171c; --muted:#8a8f98; --fg:#e8edf2; --accent:#4da3ff; --ok:#22c55e; --bad:#ef4444; --border:#242833; }
     html,body{height:100%;}
@@ -47,7 +47,7 @@
     <div class="card">
       <div class="topbar">
         <div>
-          <h1 id="title">合约手续费与盈亏计算器 V6.2</h1>
+          <h1 id="title">合约手续费与盈亏计算器 V7</h1>
           <div class="muted" id="subtitle">支持 VIP 费率、开/平 Maker/Taker、全平/按百分比分仓；未实现盈亏按剩余持仓量计算。</div>
         </div>
         <div class="lang" aria-label="Language">
@@ -108,14 +108,14 @@
           <label for="vipLevel" id="lbl_vip">VIP 等级（自动费率）</label>
           <select id="vipLevel">
             <option value="0" selected>VIP0 — Taker 0.080% / Maker 0.020%</option>
-            <option value="1">VIP1 — Taker 0.072% / Maker 0.018%</option>
-            <option value="2">VIP2 — Taker 0.060% / Maker 0.015%</option>
-            <option value="3">VIP3 — Taker 0.052% / Maker 0.013%</option>
-            <option value="4">VIP4 — Taker 0.048% / Maker 0.012%</option>
-            <option value="5">VIP5 — Taker 0.044% / Maker 0.011%</option>
-            <option value="6">VIP6 — Taker 0.040% / Maker 0.010%</option>
-            <option value="7">VIP7 — Taker 0.032% / Maker 0.008%</option>
-            <option value="8">VIP8 — Taker 0.024% / Maker 0.000%</option>
+            <option value="1">VIP1 — Taker 0.075% / Maker 0.020%</option>
+            <option value="2">VIP2 — Taker 0.060% / Maker 0.018%</option>
+            <option value="3">VIP3 — Taker 0.055% / Maker 0.018%</option>
+            <option value="4">VIP4 — Taker 0.050% / Maker 0.016%</option>
+            <option value="5">VIP5 — Taker 0.048% / Maker 0.016%</option>
+            <option value="6">VIP6 — Taker 0.045% / Maker 0.014%</option>
+            <option value="7">VIP7 — Taker 0.042% / Maker 0.012%</option>
+            <option value="8">VIP8 — Taker 0.040% / Maker 0.010%</option>
           </select>
         </div>
 
@@ -173,8 +173,8 @@
 
     const t = {
       zh: {
-        title:'合约手续费与盈亏计算器 V6.2',
-        subtitle:'V2 样式；支持 VIP 费率、开/平 Maker/Taker、全平/按百分比分仓；未实现盈亏按剩余持仓量计算。',
+        title:'合约手续费与盈亏计算器 V7',
+        subtitle:'V7（双语言 样式；支持 VIP 费率、开/平 Maker/Taker、全平/按百分比分仓；未实现盈亏按剩余持仓量计算。',
         dirLevTools:'方向 / 杠杆 / 平仓便捷操作',
         leverage:'杠杆（×）',
         fullClose:'全部平仓', apply:'应用', partialPct:'部分平仓 %', placeholderPct:'例如 25',
@@ -189,8 +189,8 @@
         disclaimer:'公式：<code>开仓手续费 = 开仓价 × 开仓量 × 费率</code>；<code>平仓手续费 = 平仓价 × 平仓量 × 费率</code>；<code>名义价值 = 开仓价 × 开仓量</code>；<code>初始保证金 ≈ 名义 ÷ 杠杆</code>；<code>未实现盈亏</code> 按 <code>剩余持仓量</code>；<code>强平价（简化）多 = 开 × (1 + MMR − 1/杠杆)</code>；<code>空 = 开 × (1 + 1/杠杆 − MMR)</code>（忽略手续费/阶梯 MMR/资金费，仅供参考）。'
       },
       en: {
-        title:'Futures Fee & PnL Calculator V6.2',
-        subtitle:'V2 layout; supports VIP fees, Maker/Taker (open/close), close-all / partial by %, unrealized P&L on remaining position.',
+        title:'Futures Fee & PnL Calculator V7',
+        subtitle:'V7 layout; supports VIP fees, Maker/Taker (open/close), close-all / partial by %, unrealized P&L on remaining position.',
         dirLevTools:'Direction / Leverage / Quick Close Tools',
         leverage:'Leverage (×)',
         fullClose:'Close All', apply:'Apply', partialPct:'Partial Close %', placeholderPct:'e.g. 25',
@@ -209,14 +209,14 @@
     // 只声明一次 vipRates，避免重复报错
     const vipRates = {
       0:{taker:0.0008, maker:0.0002},
-      1:{taker:0.00072, maker:0.00018},
-      2:{taker:0.00060, maker:0.00015},
-      3:{taker:0.00052, maker:0.00013},
-      4:{taker:0.00048, maker:0.00012},
-      5:{taker:0.00044, maker:0.00011},
-      6:{taker:0.00040, maker:0.00010},
-      7:{taker:0.00032, maker:0.00008},
-      8:{taker:0.00024, maker:0.00000}
+      1:{taker:0.00075, maker:0.0002},
+      2:{taker:0.00060, maker:0.00018},
+      3:{taker:0.00055, maker:0.00018},
+      4:{taker:0.0005, maker:0.00016},
+      5:{taker:0.00048, maker:0.00016},
+      6:{taker:0.00045, maker:0.00014},
+      7:{taker:0.00042, maker:0.00012},
+      8:{taker:0.0004, maker:0.0001}
     };
 
     function setSwitch(activeBtn){
@@ -317,8 +317,8 @@
       .forEach(id=> document.getElementById(id).addEventListener('input', calc));
 
     function num(v){ const x = parseFloat(v); return Number.isFinite(x) ? x : NaN; }
-    function fmtMoney(n){ if (!Number.isFinite(n)) return '-'; const s = (Math.round(n*100)/100).toFixed(2); return (n>0?'+':'') + s + ' ' + state.unit; }
-    function fmtPlain(n){ if (!Number.isFinite(n)) return '-'; return (Math.round(n*100)/100).toFixed(2) + ' ' + state.unit; }
+    function fmtMoney(n){ if (!Number.isFinite(n)) return '-'; return (n>0?'+':'') + n.toFixed(6) + ' ' + state.unit; }
+    function fmtPlain(n){ if (!Number.isFinite(n)) return '-'; return n.toFixed(6) + ' ' + state.unit; }
 
     const getRates = ()=> vipRates[ parseInt($('vipLevel').value,10) ] || vipRates[0];
 
@@ -384,7 +384,7 @@
 
       $('notional').textContent = fmtPlain(res.notional);
       $('initMargin').textContent = fmtPlain(res.initMargin);
-      $('liqPrice').textContent = Number.isFinite(res.liqPrice)? (Math.round(res.liqPrice*100)/100).toFixed(2)+' '+state.unit : '-';
+      $('liqPrice').textContent = Number.isFinite(res.liqPrice)? res.liqPrice.toFixed(6)+' '+state.unit : '-';
 
       $('pnlRaw').textContent = fmtMoney(res.pnlRaw);
       $('pnlRaw').className = 'value ' + (Number.isFinite(res.pnlRaw) && res.pnlRaw>=0?'pos':'neg');
